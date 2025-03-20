@@ -27,7 +27,6 @@ cursor.execute("""
 """)
 conn.commit()
 
-
 # Function to check if the snippet is Python code
 def is_python_code(snippet):
     return bool(re.match(r"^\s*(import |from |def |class )", snippet, re.MULTILINE))
@@ -57,9 +56,54 @@ def add_snippet():
 
 @app.route('/list_snippets', methods=['GET'])
 def list_snippets():
-    cursor.execute("SELECT title, description, code_snippet FROM code_snippets")
-    data = [{"title": row[0], "description": row[1], "code_snippet": row[2]} for row in cursor.fetchall()]
+    cursor.execute("SELECT id, title, description, code_snippet FROM code_snippets")
+    data = [{"id": row[0], "title": row[1], "description": row[2], "code_snippet": row[3]} for row in cursor.fetchall()]
     return jsonify({"snippets": data})
+
+
+@app.route('/update_snippet', methods=['PUT'])
+def update_snippet():
+    data = request.json
+    snippet_id = data.get("id")
+    title = data.get("title")
+    description = data.get("description")
+    code_snippet = data.get("code_snippet")
+
+    if not snippet_id or not title or not description or not code_snippet:
+        return jsonify({"error": "ID, title, description, and code snippet are required"}), 400
+
+    if not is_python_code(code_snippet):
+        return jsonify({"error": "Only Python code snippets are allowed"}), 400
+
+    cursor.execute("SELECT * FROM code_snippets WHERE id = ?", (snippet_id,))
+    result = cursor.fetchone()
+
+    if result:
+        cursor.execute("UPDATE code_snippets SET title = ?, description = ?, code_snippet = ? WHERE id = ?",
+                       (title, description, code_snippet, snippet_id))
+        conn.commit()
+        return jsonify({"message": "Code snippet updated successfully!"}), 200
+    else:
+        return jsonify({"error": "Snippet ID not found"}), 404
+
+
+@app.route('/delete_snippet', methods=['DELETE'])
+def delete_snippet():
+    data = request.json
+    snippet_id = data.get("id")
+
+    if not snippet_id:
+        return jsonify({"error": "ID is required"}), 400
+
+    cursor.execute("SELECT * FROM code_snippets WHERE id = ?", (snippet_id,))
+    result = cursor.fetchone()
+
+    if result:
+        cursor.execute("DELETE FROM code_snippets WHERE id = ?", (snippet_id,))
+        conn.commit()
+        return jsonify({"message": "Code snippet deleted successfully!"}), 200
+    else:
+        return jsonify({"error": "Snippet ID not found"}), 404
 
 
 if __name__ == '__main__':
