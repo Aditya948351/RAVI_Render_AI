@@ -27,9 +27,9 @@ cursor.execute("""
 """)
 conn.commit()
 
-# Function to check if the snippet is Python code
 def is_python_code(snippet):
-    return bool(re.match(r"^\s*(import |from |def |class )", snippet, re.MULTILINE))
+    python_keywords = keyword.kwlist + ["print", "def", "import"]
+    return any(kw in snippet for kw in python_keywords)
 
 
 @app.route('/add_snippet', methods=['POST'])
@@ -39,19 +39,14 @@ def add_snippet():
     description = data.get("description")
     code_snippet = data.get("code_snippet")
 
-    if not title or not description or not code_snippet:
-        return jsonify({"error": "Title, description, and code snippet are required"}), 400
-
     if not is_python_code(code_snippet):
         return jsonify({"error": "Only Python code snippets are allowed"}), 400
 
-    try:
-        cursor.execute("INSERT INTO code_snippets (title, description, code_snippet) VALUES (?, ?, ?)",
-                       (title, description, code_snippet))
-        conn.commit()
-        return jsonify({"message": "Code snippet added successfully!"}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({"error": "Title already exists"}), 409
+    cursor.execute("INSERT INTO snippets (title, description, code_snippet) VALUES (?, ?, ?)",
+                   (title, description, code_snippet))
+    conn.commit()
+
+    return jsonify({"message": "Snippet added successfully!"}), 201
 
 
 @app.route('/list_snippets', methods=['GET'])
