@@ -14,9 +14,9 @@ cursor = conn.cursor()
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS code_snippets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT UNIQUE,
-        description TEXT,
-        code_snippet TEXT
+        title TEXT,
+        description TEXT UNIQUE,
+        code_snippet TEXT UNIQUE  
     )
 """)
 conn.commit()
