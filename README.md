@@ -148,7 +148,7 @@ ravi-snippet-backend/
 
 <h2>✅ Tech Stack</h2>
 <ul>
-    <li>Python 3.x</li>
+    <li>Python 3.9</li>
     <li>Flask</li>
     <li>SQLite3</li>
     <li>Render (for cloud deployment)</li>
